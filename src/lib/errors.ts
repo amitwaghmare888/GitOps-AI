@@ -7,6 +7,10 @@ export type ErrorCode =
   | 'DB_QUERY_FAILED'
   | 'DB_NOT_FOUND'
   | 'PROFILE_CREATE_FAILED'
+  | 'GITHUB_TOKEN_MISSING'
+  | 'GITHUB_API_FAILED'
+  | 'REPO_SYNC_FAILED'
+  | 'VALIDATION_ERROR'
   | 'UNKNOWN';
 
 export class AppError extends Error {
@@ -42,6 +46,30 @@ export class NotFoundError extends AppError {
   }
 }
 
+export class GitHubApiError extends AppError {
+  constructor(message: string, cause?: unknown) {
+    super(message, 'GITHUB_API_FAILED', cause);
+    this.name = 'GitHubApiError';
+  }
+}
+
+export class GitHubTokenMissingError extends AppError {
+  constructor() {
+    super(
+      'GitHub token unavailable — please sign out and sign back in to refresh your GitHub access.',
+      'GITHUB_TOKEN_MISSING',
+    );
+    this.name = 'GitHubTokenMissingError';
+  }
+}
+
+export class ValidationError extends AppError {
+  constructor(message: string, cause?: unknown) {
+    super(message, 'VALIDATION_ERROR', cause);
+    this.name = 'ValidationError';
+  }
+}
+
 /**
  * Safely normalises an unknown thrown value into an AppError.
  */
@@ -52,3 +80,4 @@ export function toAppError(err: unknown): AppError {
   }
   return new AppError(String(err), 'UNKNOWN', err);
 }
+
