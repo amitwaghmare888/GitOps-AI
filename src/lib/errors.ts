@@ -11,6 +11,7 @@ export type ErrorCode =
   | 'GITHUB_API_FAILED'
   | 'REPO_SYNC_FAILED'
   | 'VALIDATION_ERROR'
+  | 'AI_ANALYSIS_FAILED'
   | 'UNKNOWN';
 
 export class AppError extends Error {
@@ -67,6 +68,13 @@ export class ValidationError extends AppError {
   constructor(message: string, cause?: unknown) {
     super(message, 'VALIDATION_ERROR', cause);
     this.name = 'ValidationError';
+  }
+}
+
+export class AIAnalysisError extends AppError {
+  constructor(message: string, cause?: unknown) {
+    super(message, 'AI_ANALYSIS_FAILED', cause);
+    this.name = 'AIAnalysisError';
   }
 }
 
