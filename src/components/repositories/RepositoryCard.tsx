@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import type { Repository } from '@/types/database';
 
 const LANGUAGE_COLORS: Record<string, string> = {
@@ -102,20 +103,20 @@ export function RepositoryCard({ repository: repo }: RepositoryCardProps) {
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2 flex-wrap">
-            <a
-              href={repo.html_url}
-              target="_blank"
-              rel="noopener noreferrer"
+            {/* ── Internal navigation: opens Repository Detail Page ── */}
+            <Link
+              href={`/repositories/${repo.id}`}
               className="text-sm font-semibold text-blue-300 hover:text-blue-200 hover:underline transition-colors truncate"
-              aria-label={`Open ${repo.full_name} on GitHub`}
+              aria-label={`Open ${repo.full_name} repository details`}
             >
               {repo.name}
-            </a>
+            </Link>
             <VisibilityBadge visibility={repo.visibility} />
           </div>
           <p className="mt-0.5 text-[11px] text-zinc-600 truncate">{repo.owner}</p>
         </div>
 
+        {/* ── External link: opens GitHub in new tab (secondary action only) ── */}
         <a
           href={repo.html_url}
           target="_blank"
@@ -131,11 +132,13 @@ export function RepositoryCard({ repository: repo }: RepositoryCardProps) {
         </a>
       </div>
 
-      {/* Description */}
+      {/* Description — clicking it also navigates internally */}
       {repo.description && (
-        <p className="line-clamp-2 text-xs leading-relaxed text-zinc-400">
-          {repo.description}
-        </p>
+        <Link href={`/repositories/${repo.id}`} className="block" tabIndex={-1} aria-hidden="true">
+          <p className="line-clamp-2 text-xs leading-relaxed text-zinc-400">
+            {repo.description}
+          </p>
+        </Link>
       )}
 
       {/* Footer */}

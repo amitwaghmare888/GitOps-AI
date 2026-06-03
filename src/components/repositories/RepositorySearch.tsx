@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 export function RepositorySearch() {
@@ -8,10 +8,17 @@ export function RepositorySearch() {
   const searchParams = useSearchParams();
   const [value, setValue] = useState(searchParams.get('search') ?? '');
 
+  // Keep a ref to the latest searchParams so the debounce effect can read
+  // current params without searchParams itself being a reactive dependency.
+  const searchParamsRef = useRef(searchParams);
+  useEffect(() => {
+    searchParamsRef.current = searchParams;
+  }, [searchParams]);
+
   // Debounce: update URL 350ms after the user stops typing
   useEffect(() => {
     const handler = setTimeout(() => {
-      const params = new URLSearchParams(searchParams.toString());
+      const params = new URLSearchParams(searchParamsRef.current.toString());
       if (value) {
         params.set('search', value);
       } else {
@@ -21,7 +28,7 @@ export function RepositorySearch() {
     }, 350);
 
     return () => clearTimeout(handler);
-  }, [value, router, searchParams]);
+  }, [value, router]);
 
   const handleClear = useCallback(() => {
     setValue('');

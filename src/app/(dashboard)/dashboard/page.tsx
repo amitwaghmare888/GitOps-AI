@@ -9,6 +9,7 @@ import { SyncButton } from '@/components/repositories/SyncButton';
 import { RepositorySearch } from '@/components/repositories/RepositorySearch';
 import { RepositoryList } from '@/components/repositories/RepositoryList';
 import { toAppError } from '@/lib/errors';
+import { measure, logTimingTable, type TimingEntry } from '@/lib/perf';
 import type { GitHubUserMetadata } from '@/types/auth';
 import type { Repository } from '@/types/database';
 
@@ -37,7 +38,28 @@ function StatCard({ label, value, sub, icon, accent }: StatCardProps) {
   );
 }
 
-// ─── Data fetching ────────────────────────────────────────────────────────────
+// ─── In-memory stats computation ──────────────────────────────────────────────
+
+function computeStatsFromRepos(allRepos: Repository[]) {
+  const totalRepos = allRepos.length;
+
+  const langSet = new Set<string>();
+  let lastSyncedAt: string | null = null;
+  for (const repo of allRepos) {
+    if (repo.language) langSet.add(repo.language);
+    if (repo.synced_at && (!lastSyncedAt || repo.synced_at > lastSyncedAt)) {
+      lastSyncedAt = repo.synced_at;
+    }
+  }
+
+  return {
+    totalRepos,
+    languages: Array.from(langSet).sort(),
+    lastSyncedAt,
+  };
+}
+
+// ─── Client-side filtering ────────────────────────────────────────────────────
 
 interface PageSearchParams {
   search?: string;
@@ -45,31 +67,65 @@ interface PageSearchParams {
   visibility?: string;
 }
 
+function filterRepos(repos: Repository[], filters: PageSearchParams): Repository[] {
+  let result = repos;
+
+  if (filters.search) {
+    const q = filters.search.toLowerCase();
+    result = result.filter(
+      (r) =>
+        r.name.toLowerCase().includes(q) ||
+        r.full_name.toLowerCase().includes(q) ||
+        (r.description && r.description.toLowerCase().includes(q)),
+    );
+  }
+
+  if (filters.language) {
+    const lang = filters.language.toLowerCase();
+    result = result.filter((r) => r.language && r.language.toLowerCase() === lang);
+  }
+
+  if (filters.visibility) {
+    result = result.filter((r) => r.visibility === filters.visibility);
+  }
+
+  return result;
+}
+
+// ─── Data fetching (OPTIMIZED: 1 Supabase query → in-memory stats) ───────────
+
 interface RepoData {
   repositories: Repository[];
   totalRepos: number;
   languages: string[];
   lastSyncedAt: string | null;
   hasError: boolean;
+  timings: TimingEntry[];
 }
 
 async function fetchRepoData(profileId: string, filters: PageSearchParams): Promise<RepoData> {
   try {
-    const [repositories, stats] = await Promise.all([
-      repositoryService.listRepositories(profileId, {
-        search: filters.search,
-        language: filters.language,
-        visibility: filters.visibility,
-      }),
-      repositoryService.getDashboardStats(profileId),
-    ]);
+    // OPTIMIZATION: Single query fetches ALL repos (unfiltered).
+    // Stats are computed in-memory. Filtering is applied in-memory.
+    // This eliminates 3 redundant Supabase roundtrips (count, languages, lastSyncedAt).
+    const { result: allRepos, entry: t1 } = await measure(
+      'listRepositories (unfiltered)',
+      () => repositoryService.listRepositories(profileId),
+    );
+
+    const startStats = performance.now();
+    const stats = computeStatsFromRepos(allRepos);
+    const filteredRepos = filterRepos(allRepos, filters);
+    const statsMs = Math.round((performance.now() - startStats) * 100) / 100;
+    const t2: TimingEntry = { label: 'in-memory stats+filter', durationMs: statsMs };
 
     return {
-      repositories,
+      repositories: filteredRepos,
       totalRepos: stats.totalRepos,
       languages: stats.languages,
       lastSyncedAt: stats.lastSyncedAt,
       hasError: false,
+      timings: [t1, t2],
     };
   } catch (err) {
     const appErr = toAppError(err);
@@ -80,6 +136,7 @@ async function fetchRepoData(profileId: string, filters: PageSearchParams): Prom
       languages: [],
       lastSyncedAt: null,
       hasError: true,
+      timings: [],
     };
   }
 }
@@ -91,8 +148,19 @@ interface DashboardPageProps {
 }
 
 export default async function DashboardPage({ searchParams }: DashboardPageProps) {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const allTimings: TimingEntry[] = [];
+
+  const { result: supabase, entry: t0 } = await measure(
+    'createClient()',
+    () => createClient(),
+  );
+  allTimings.push(t0);
+
+  const { result: { data: { user } }, entry: t1 } = await measure(
+    'auth.getUser() [page]',
+    () => supabase.auth.getUser(),
+  );
+  allTimings.push(t1);
 
   if (!user) {
     redirect('/login');
@@ -107,8 +175,16 @@ export default async function DashboardPage({ searchParams }: DashboardPageProps
   // Await search params (Next.js 16 async searchParams)
   const filters = await searchParams;
 
-  const { repositories, totalRepos, languages, lastSyncedAt, hasError } =
-    await fetchRepoData(user.id, filters);
+  const { result: repoResult, entry: t2 } = await measure(
+    'fetchRepoData (total)',
+    () => fetchRepoData(user.id, filters),
+  );
+  allTimings.push(t2);
+  allTimings.push(...repoResult.timings);
+
+  const { repositories, totalRepos, languages, lastSyncedAt, hasError } = repoResult;
+
+  logTimingTable('Dashboard Page', allTimings);
 
   const lastSyncLabel = lastSyncedAt
     ? new Date(lastSyncedAt).toLocaleString('en-US', {
