@@ -1,4 +1,5 @@
 import Image from 'next/image';
+import Link from 'next/link';
 import { SyncIssuesButton } from '@/components/issues/SyncIssuesButton';
 import type { Issue } from '@/types/issues';
 
@@ -115,15 +116,13 @@ export function IssueList({ repositoryId, issues, hasError }: IssueListProps) {
                 <tr key={issue.id} className="transition-colors hover:bg-[#1a2740]/20">
                   <td className="px-4 py-3 max-w-[300px]">
                     <div className="flex flex-col gap-1">
-                      <a
-                        href={issue.html_url}
-                        target="_blank"
-                        rel="noopener noreferrer"
+                      <Link
+                        href={`/issues/${issue.id}`}
                         className="font-medium text-zinc-200 hover:text-blue-400 hover:underline truncate"
                         title={issue.title}
                       >
                         {issue.title}
-                      </a>
+                      </Link>
                       <span className="text-[11px] text-zinc-500">
                         #{issue.issue_number}
                       </span>
@@ -171,8 +170,24 @@ export function IssueList({ repositoryId, issues, hasError }: IssueListProps) {
                       <span className="text-xs text-zinc-400">{issue.author_login}</span>
                     </div>
                   </td>
-                  <td className="px-4 py-3 whitespace-nowrap text-xs text-zinc-500">
-                    {updatedAt}
+                  <td className="px-4 py-3 whitespace-nowrap">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs text-zinc-500">{updatedAt}</span>
+                      <a
+                        href={issue.html_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-zinc-600 transition-colors hover:text-zinc-300"
+                        aria-label="View on GitHub"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none"
+                          stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                          <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6" />
+                          <polyline points="15 3 21 3 21 9" />
+                          <line x1="10" y1="14" x2="21" y2="3" />
+                        </svg>
+                      </a>
+                    </div>
                   </td>
                 </tr>
               );

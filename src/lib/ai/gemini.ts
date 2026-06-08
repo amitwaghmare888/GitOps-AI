@@ -10,7 +10,7 @@ const MODEL_NAME = 'gemini-2.5-flash';
 
 export { MODEL_NAME };
 
-// ─── Zod schema for strict output validation ────────────────────────────────
+// ─── Zod schema for repository analysis (Phase 8) ───────────────────────────
 
 const FindingSchema = z.object({
   category: z.string().min(1),
@@ -48,11 +48,12 @@ function getGeminiClient(): GoogleGenerativeAI {
 }
 
 /**
- * Calls Gemini 2.5 Flash with the given prompt and validates the response
- * against a strict Zod schema. Never returns malformed data.
+ * Generic Gemini caller. Sends a prompt, parses JSON, validates against
+ * the provided Zod schema. All analysis types (repository, issue, etc.)
+ * share this single code path for HTTP, error handling, and validation.
  */
-export async function analyzeRepository(prompt: string): Promise<AIAnalysisResponse> {
-  log.info('analyzeRepository: calling Gemini', { model: MODEL_NAME });
+export async function callGemini<T>(prompt: string, schema: z.ZodType<T>): Promise<T> {
+  log.info('callGemini: calling Gemini', { model: MODEL_NAME });
 
   const genAI = getGeminiClient();
   const model = genAI.getGenerativeModel({
@@ -68,6 +69,8 @@ export async function analyzeRepository(prompt: string): Promise<AIAnalysisRespo
   try {
     const result = await model.generateContent(prompt);
     rawText = result.response.text();
+    // DEBUG-TEMP: remove after diagnosis
+    console.error('[DEBUG] callGemini raw response:', rawText.slice(0, 2000));
 
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
@@ -100,24 +103,36 @@ export async function analyzeRepository(prompt: string): Promise<AIAnalysisRespo
   let parsed: unknown;
   try {
     parsed = JSON.parse(rawText);
+    // DEBUG-TEMP: remove after diagnosis
+    console.error('[DEBUG] callGemini parsed JSON:', JSON.stringify(parsed, null, 2));
   } catch {
     log.error('Gemini returned invalid JSON', { rawText: rawText.slice(0, 500) });
     throw new AIAnalysisError('AI returned malformed response. Please try again.');
   }
 
-  const validated = AIAnalysisResponseSchema.safeParse(parsed);
+  const validated = schema.safeParse(parsed);
   if (!validated.success) {
+    const zodError = validated.error as z.ZodError;
+    // DEBUG-TEMP: remove after diagnosis
+    console.error('[DEBUG] Zod fieldErrors:', JSON.stringify(zodError.flatten().fieldErrors, null, 2));
+    console.error('[DEBUG] Zod formErrors:', JSON.stringify(zodError.flatten().formErrors, null, 2));
+    console.error('[DEBUG] Zod full issues:', JSON.stringify(zodError.issues, null, 2));
     log.error('Gemini response failed schema validation', {
-      errors: validated.error.flatten().fieldErrors,
+      errors: zodError.flatten().fieldErrors,
     });
     throw new AIAnalysisError('AI response did not match expected format. Please try again.');
   }
 
-  log.info('analyzeRepository: Gemini response validated', {
-    findings: validated.data.findings.length,
-    risks: validated.data.risks.length,
-    recommendations: validated.data.recommendations.length,
-  });
+  log.info('callGemini: response validated');
 
   return validated.data;
+}
+
+/**
+ * Calls Gemini 2.5 Flash for repository analysis.
+ * Thin wrapper around callGemini with the repository-specific schema.
+ */
+export async function analyzeRepository(prompt: string): Promise<AIAnalysisResponse> {
+  log.info('analyzeRepository: delegating to callGemini', { model: MODEL_NAME });
+  return callGemini(prompt, AIAnalysisResponseSchema);
 }

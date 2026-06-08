@@ -3,10 +3,12 @@ import { redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import { repositoryService } from '@/lib/services/repository.service';
 import { repositoryAnalysisService } from '@/lib/services/repository-analysis.service';
+import { issueService } from '@/lib/services/issue.service';
 import { SyncIssuesButton } from '@/components/issues/SyncIssuesButton';
 import { SyncPullRequestsButton } from '@/components/pull-requests/SyncPullRequestsButton';
 import { AnalyzeRepositoryButton } from '@/components/repositories/AnalyzeRepositoryButton';
 import { RepositoryAnalysisCard } from '@/components/repositories/RepositoryAnalysisCard';
+import { IssueList } from '@/components/issues/IssueList';
 import { toAppError, NotFoundError } from '@/lib/errors';
 import { createLogger } from '@/lib/logger';
 
@@ -38,12 +40,31 @@ export default async function RepositoryDetailPage({ params }: RepositoryDetailP
     redirect('/dashboard');
   }
 
-  // Load latest analysis (non-blocking — page still renders if this fails)
+  // Load latest analysis and issues in parallel (non-blocking — page still renders if either fails)
   let latestAnalysis = null;
+  let issues: import('@/types/issues').Issue[] = [];
+  let issuesError = false;
+
   try {
-    latestAnalysis = await repositoryAnalysisService.getLatestAnalysis(user.id, id);
+    const [analysisResult, issuesResult] = await Promise.allSettled([
+      repositoryAnalysisService.getLatestAnalysis(user.id, id),
+      issueService.getRepositoryIssues(user.id, id, { limit: 50 }),
+    ]);
+
+    if (analysisResult.status === 'fulfilled') {
+      latestAnalysis = analysisResult.value;
+    } else {
+      log.error('Failed to load analysis', { error: toAppError(analysisResult.reason).message });
+    }
+
+    if (issuesResult.status === 'fulfilled') {
+      issues = issuesResult.value.data;
+    } else {
+      log.error('Failed to load issues', { error: toAppError(issuesResult.reason).message });
+      issuesError = true;
+    }
   } catch (err) {
-    log.error('Failed to load analysis', { error: toAppError(err).message });
+    log.error('Failed to load page data', { error: toAppError(err).message });
   }
 
   const pushedAt = repository.pushed_at
@@ -188,6 +209,14 @@ export default async function RepositoryDetailPage({ params }: RepositoryDetailP
             AI Analysis
           </h2>
           <RepositoryAnalysisCard analysis={latestAnalysis} />
+        </section>
+
+        {/* ── Issues ───────────────────────────────────────────────────── */}
+        <section aria-labelledby="issues-section-heading" className="mt-8">
+          <h2 className="mb-3 text-sm font-semibold text-zinc-100" id="issues-section-heading">
+            Issues
+          </h2>
+          <IssueList repositoryId={repository.id} issues={issues} hasError={issuesError} />
         </section>
       </main>
     </div>
