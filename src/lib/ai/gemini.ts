@@ -69,8 +69,6 @@ export async function callGemini<T>(prompt: string, schema: z.ZodType<T>): Promi
   try {
     const result = await model.generateContent(prompt);
     rawText = result.response.text();
-    // DEBUG-TEMP: remove after diagnosis
-    console.error('[DEBUG] callGemini raw response:', rawText.slice(0, 2000));
 
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
@@ -103,8 +101,6 @@ export async function callGemini<T>(prompt: string, schema: z.ZodType<T>): Promi
   let parsed: unknown;
   try {
     parsed = JSON.parse(rawText);
-    // DEBUG-TEMP: remove after diagnosis
-    console.error('[DEBUG] callGemini parsed JSON:', JSON.stringify(parsed, null, 2));
   } catch {
     log.error('Gemini returned invalid JSON', { rawText: rawText.slice(0, 500) });
     throw new AIAnalysisError('AI returned malformed response. Please try again.');
@@ -113,10 +109,6 @@ export async function callGemini<T>(prompt: string, schema: z.ZodType<T>): Promi
   const validated = schema.safeParse(parsed);
   if (!validated.success) {
     const zodError = validated.error as z.ZodError;
-    // DEBUG-TEMP: remove after diagnosis
-    console.error('[DEBUG] Zod fieldErrors:', JSON.stringify(zodError.flatten().fieldErrors, null, 2));
-    console.error('[DEBUG] Zod formErrors:', JSON.stringify(zodError.flatten().formErrors, null, 2));
-    console.error('[DEBUG] Zod full issues:', JSON.stringify(zodError.issues, null, 2));
     log.error('Gemini response failed schema validation', {
       errors: zodError.flatten().fieldErrors,
     });
