@@ -72,4 +72,39 @@ export const issueAnalysisRepository = {
 
     return (data ?? []) as IssueAnalysis[];
   },
+
+  /**
+   * Returns the most recent analysis for each of the given issue IDs.
+   * Deduplicates in-memory: Supabase .in() returns all rows, not one per group.
+   */
+  async getLatestForIssues(issueIds: string[]): Promise<IssueAnalysis[]> {
+    if (issueIds.length === 0) return [];
+
+    log.debug('getLatestForIssues', { count: issueIds.length });
+    const supabase = await createClient();
+
+    const { data, error } = await supabase
+      .from('issue_analyses')
+      .select('*')
+      .in('issue_id', issueIds)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      log.error('getLatestForIssues failed', { error: error.message });
+      throw new DatabaseError(`Failed to fetch issue analyses: ${error.message}`, error);
+    }
+
+    // Deduplicate: keep only the first (most recent) row per issue_id
+    const seen = new Set<string>();
+    const latest: IssueAnalysis[] = [];
+    for (const row of (data ?? [])) {
+      const r = row as IssueAnalysis;
+      if (!seen.has(r.issue_id)) {
+        seen.add(r.issue_id);
+        latest.push(r);
+      }
+    }
+
+    return latest;
+  },
 };

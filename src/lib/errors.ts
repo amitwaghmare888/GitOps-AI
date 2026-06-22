@@ -12,6 +12,7 @@ export type ErrorCode =
   | 'REPO_SYNC_FAILED'
   | 'VALIDATION_ERROR'
   | 'AI_ANALYSIS_FAILED'
+  | 'PRECONDITION_FAILED'
   | 'UNKNOWN';
 
 export class AppError extends Error {
@@ -75,6 +76,13 @@ export class AIAnalysisError extends AppError {
   constructor(message: string, cause?: unknown) {
     super(message, 'AI_ANALYSIS_FAILED', cause);
     this.name = 'AIAnalysisError';
+  }
+}
+
+export class PreconditionError extends AppError {
+  constructor(message: string, cause?: unknown) {
+    super(message, 'PRECONDITION_FAILED', cause);
+    this.name = 'PreconditionError';
   }
 }
 

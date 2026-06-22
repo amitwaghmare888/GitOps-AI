@@ -4,10 +4,14 @@ import { createClient } from '@/lib/supabase/server';
 import { repositoryService } from '@/lib/services/repository.service';
 import { repositoryAnalysisService } from '@/lib/services/repository-analysis.service';
 import { issueService } from '@/lib/services/issue.service';
+import { roadmapService } from '@/lib/services/roadmap.service';
+import { issueAnalysisRepository } from '@/lib/repositories/issue-analysis.repository';
 import { SyncIssuesButton } from '@/components/issues/SyncIssuesButton';
 import { SyncPullRequestsButton } from '@/components/pull-requests/SyncPullRequestsButton';
 import { AnalyzeRepositoryButton } from '@/components/repositories/AnalyzeRepositoryButton';
+import { GenerateRoadmapButton } from '@/components/repositories/GenerateRoadmapButton';
 import { RepositoryAnalysisCard } from '@/components/repositories/RepositoryAnalysisCard';
+import { RoadmapCard } from '@/components/repositories/RoadmapCard';
 import { IssueList } from '@/components/issues/IssueList';
 import { toAppError, NotFoundError } from '@/lib/errors';
 import { createLogger } from '@/lib/logger';
@@ -40,15 +44,18 @@ export default async function RepositoryDetailPage({ params }: RepositoryDetailP
     redirect('/dashboard');
   }
 
-  // Load latest analysis and issues in parallel (non-blocking — page still renders if either fails)
+  // Load latest analysis, issues, and roadmap in parallel (non-blocking — page still renders if any fail)
   let latestAnalysis = null;
   let issues: import('@/types/issues').Issue[] = [];
   let issuesError = false;
+  let latestRoadmap = null;
+  let hasIssueAnalyses = false;
 
   try {
-    const [analysisResult, issuesResult] = await Promise.allSettled([
+    const [analysisResult, issuesResult, roadmapResult] = await Promise.allSettled([
       repositoryAnalysisService.getLatestAnalysis(user.id, id),
       issueService.getRepositoryIssues(user.id, id, { limit: 50 }),
+      roadmapService.getLatestRoadmap(user.id, id),
     ]);
 
     if (analysisResult.status === 'fulfilled') {
@@ -62,6 +69,23 @@ export default async function RepositoryDetailPage({ params }: RepositoryDetailP
     } else {
       log.error('Failed to load issues', { error: toAppError(issuesResult.reason).message });
       issuesError = true;
+    }
+
+    if (roadmapResult.status === 'fulfilled') {
+      latestRoadmap = roadmapResult.value;
+    } else {
+      log.error('Failed to load roadmap', { error: toAppError(roadmapResult.reason).message });
+    }
+
+    // Check if any issue analyses exist (for GenerateRoadmapButton warning)
+    if (issues.length > 0) {
+      try {
+        const issueIds = issues.slice(0, 5).map((i) => i.id);
+        const analyses = await issueAnalysisRepository.getLatestForIssues(issueIds);
+        hasIssueAnalyses = analyses.length > 0;
+      } catch {
+        // Non-critical — button will just show warning
+      }
     }
   } catch (err) {
     log.error('Failed to load page data', { error: toAppError(err).message });
@@ -201,6 +225,7 @@ export default async function RepositoryDetailPage({ params }: RepositoryDetailP
           <SyncIssuesButton repositoryId={repository.id} />
           <SyncPullRequestsButton repositoryId={repository.id} />
           <AnalyzeRepositoryButton repositoryId={repository.id} />
+          <GenerateRoadmapButton repositoryId={repository.id} hasIssueAnalyses={hasIssueAnalyses} />
         </div>
 
         {/* ── Analysis card ───────────────────────────────────────────────── */}
@@ -209,6 +234,14 @@ export default async function RepositoryDetailPage({ params }: RepositoryDetailP
             AI Analysis
           </h2>
           <RepositoryAnalysisCard analysis={latestAnalysis} />
+        </section>
+
+        {/* ── Roadmap ───────────────────────────────────────────────────── */}
+        <section aria-labelledby="roadmap-section-heading" className="mt-8" id="roadmap-section">
+          <h2 className="mb-3 text-sm font-semibold text-zinc-100" id="roadmap-section-heading">
+            Roadmap
+          </h2>
+          <RoadmapCard roadmap={latestRoadmap} />
         </section>
 
         {/* ── Issues ───────────────────────────────────────────────────── */}

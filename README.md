@@ -10,39 +10,49 @@
     <img src="https://img.shields.io/badge/Agentic_AI-Powered-8B5CF6?style=flat" alt="Agentic AI" />
     <a href="https://www.typescriptlang.org"><img src="https://img.shields.io/badge/TypeScript-5.0-3178C6?style=flat&logo=typescript" alt="TypeScript" /></a>
     <a href="https://tailwindcss.com"><img src="https://img.shields.io/badge/Tailwind-CSS-38B2AC?style=flat&logo=tailwind-css" alt="Tailwind CSS" /></a>
+    <img src="https://img.shields.io/badge/status-production--ready-22C55E?style=flat" alt="Status" />
   </p>
 </div>
 
 ---
 
-GitOps AI bridges the gap between raw Git data and actionable engineering strategy. By deeply integrating with GitHub, it extracts repository states, issue metadata, and pull requests, feeding them through an optimized Agentic AI pipeline to deliver **Repository Intelligence**, **Issue Intelligence**, and transparent **DevOps Visibility**.
+## 🚀 TL;DR
 
-## Key Features
+GitOps AI is a **production-ready, full-stack SaaS platform** that turns raw GitHub data into actionable engineering intelligence using a structured AI pipeline. Built with Next.js 15, Supabase, and Gemini AI — it goes well beyond a "ChatGPT wrapper" by implementing **deterministic confidence scoring**, **Zod-validated AI outputs**, and a **multi-layer service architecture**.
 
-### Repository Intelligence
-Assess the systemic health of projects before diving into the code.
-- **Health Scoring**: Classifies repositories into lifecycle stages (e.g., Active, Dormant).
-- **Risk Analysis**: Identifies architectural, structural, and dependency risks.
-- **AI Recommendations**: Provides actionable intelligence to improve repository maintenance.
-- **Evidence-Based Insights**: Grounds AI findings in actual repository metadata and commit frequencies.
+> Built to solve a real problem: engineering teams lose hours manually triaging issues, estimating complexity, and assessing repository health. GitOps AI automates all of it.
 
-### Issue Intelligence V2
-Stop guessing scope. Start engineering.
-- **Priority Classification**: Deterministic parsing of bug vs. feature vs. refactor.
-- **Complexity Estimation**: Predicts the architectural footprint of an issue.
-- **Risk Assessment**: Evaluates the potential blast radius.
-- **Story Point Generation**: Deterministically maps complexity to agile story points (1, 2, 3, 5, 8).
-- **Acceptance Criteria Generation**: Creates 2-5 testable conditions for issue resolution.
-- **Implementation Planning**: Maps out short, actionable technical steps.
-- **Blocker Detection**: Highlights implicit blockers identified within issue comments.
-
-### Engineering Analytics
-*Current*: Deep dive views into individual repositories and issues via a high-performance Next.js dashboard.
-*Future*: Aggregated organizational metrics spanning PR velocity, developer throughput, and predictive risk indicators.
+> **Project Status**: Core platform is fully functional. Currently extending towards multi-agent orchestration and advanced analytics — 4 phases remaining.
 
 ---
 
-## Architecture
+GitOps AI bridges the gap between raw Git data and actionable engineering strategy. By deeply integrating with GitHub, it extracts repository states, issue metadata, and pull requests, feeding them through an optimized Agentic AI pipeline to deliver **Repository Intelligence**, **Issue Intelligence**, and transparent **DevOps Visibility**.
+
+## ✨ Key Features
+
+### 🏛️ Repository Intelligence
+Assess the systemic health of projects before diving into the code.
+- **Health Scoring**: Classifies repositories into lifecycle stages (Incubating, Active, Maturing, Stale, Dormant).
+- **Risk Analysis**: Identifies architectural, structural, and dependency risks with evidence-backed reasoning.
+- **AI Recommendations**: Actionable intelligence to improve repository maintenance — not generic summaries.
+- **Evidence-Based Insights**: Grounds all AI findings in real repository metadata and commit frequencies.
+
+### 🧠 Issue Intelligence V2
+Stop guessing scope. Start engineering.
+- **Priority Classification**: Deterministic parsing of bug vs. feature vs. refactor vs. ci_cd.
+- **Complexity Estimation**: Predicts the architectural footprint and blast radius of an issue.
+- **Story Point Generation**: Deterministically maps AI-assessed complexity to standard Fibonacci story points (1, 2, 3, 5, 8).
+- **Acceptance Criteria Generation**: Creates 2–5 testable, concrete conditions for issue resolution.
+- **Implementation Planning**: Maps out concise, ordered technical steps for execution.
+- **Blocker Detection**: Surfaces implicit blockers buried in issue comments.
+
+### 📊 Engineering Analytics
+**Current**: Deep-dive views into individual repositories and issues via a high-performance Next.js dashboard.  
+**Planned**: Aggregated organizational metrics — PR velocity, developer throughput, predictive risk indicators.
+
+---
+
+## 🏗️ Architecture
 
 ### System Architecture
 
@@ -96,30 +106,30 @@ flowchart TD
 
 ---
 
-## System Design
+## 🛠️ System Design
 
-- **Frontend Layer**: Built with **Next.js (App Router)** utilizing Server Components for optimal initial load times and parallel data fetching. Styled with **Tailwind CSS** implementing a dark-theme, professional SaaS aesthetic.
-- **Backend Layer**: **Next.js Route Handlers** serve as lightweight API controllers passing requests securely to the **Service Layer** (e.g., `issue.service.ts`). Business logic is strictly separated from presentation and HTTP routing.
-- **Data Layer**: **Supabase PostgreSQL** provides durable storage. The architecture uses the Repository pattern (`.repository.ts` files) to abstract database queries, relying on **Row Level Security (RLS)** to enforce tenant data isolation.
-- **AI Layer**: A unified **AI Client** (`gemini.ts`) handles API resilience, JSON parsing, and schema validation.
-- **Integration Layer**: The system integrates natively with the **GitHub REST API** for entity synchronization, updating records efficiently.
+- **Frontend Layer**: Built with **Next.js 15 (App Router)** utilizing Server Components for optimal initial load times and parallel data fetching via `Promise.allSettled`. Styled with **Tailwind CSS** implementing a professional dark-theme SaaS aesthetic.
+- **Backend Layer**: **Next.js Route Handlers** serve as lightweight API controllers, passing requests securely to a dedicated **Service Layer** (`issue.service.ts`, `repository-analysis.service.ts`). Business logic is strictly separated from HTTP routing and presentation.
+- **Data Layer**: **Supabase PostgreSQL** provides durable relational storage. The architecture uses the Repository pattern (`.repository.ts` files) to fully abstract database queries, with **Row Level Security (RLS)** enforcing tenant data isolation at the database level.
+- **AI Layer**: A unified **AI Client** (`gemini.ts`) handles API resilience, structured JSON parsing, and Zod schema validation — ensuring no hallucinated or malformed AI outputs can reach the database.
+- **Integration Layer**: Native integration with the **GitHub REST API** for efficient entity synchronization via idempotent upserts.
 
 ---
 
-## Technology Stack
+## 💻 Technology Stack
 
 | Domain | Technology | Purpose |
 |--------|------------|---------|
 | **Frontend** | Next.js 15, React 19, Tailwind CSS v4 | Server-rendered UI, component architecture, styling |
 | **Backend** | Next.js API Routes, Node.js | API endpoints, secure service orchestration |
 | **Database** | Supabase, PostgreSQL | Relational data, RLS, Edge Functions (Auth) |
-| **Authentication**| Supabase Auth, `@supabase/ssr` | Secure, cookie-based session management |
-| **AI** | Agentic AI, Zod | Generative intelligence, strict JSON output validation |
-| **DevOps** | ESLint, TypeScript | Static typing, code quality, standard enforcement |
+| **Authentication** | Supabase Auth, `@supabase/ssr` | Secure, cookie-based session management |
+| **AI** | Agentic AI (Gemini), Zod | Generative intelligence, strict JSON output validation |
+| **DevOps** | ESLint, TypeScript (`tsc --noEmit`) | Static typing, code quality, standard enforcement |
 
 ---
 
-## Database Design
+## 🗄️ Database Design
 
 ```mermaid
 erDiagram
@@ -157,40 +167,52 @@ erDiagram
 
 ---
 
-## AI Architecture
+## 🤖 AI Architecture
 
 ### Repository Intelligence Engine
-- **Inputs**: Repo metadata, language distribution, GitHub creation and push dates.
-- **Prompt Strategy**: Strictly instructed to evaluate lifecycle stages (incubation, mature, stale) and generate actionable recommendations rather than generic summaries.
-- **Output**: JSON payload outlining findings, structural risks, and prioritized recommendations.
+- **Inputs**: Repo metadata, language distribution, GitHub creation and last-push dates.
+- **Prompt Strategy**: Strictly instructed to evaluate lifecycle stages (incubation, mature, stale) and generate actionable recommendations — not generic text summaries.
+- **Output**: Validated JSON payload outlining findings, structural risks, and prioritized recommendations.
 
 ### Issue Intelligence Engine (V2)
-- **Classification**: Categorizes issues (bug, feature, refactor, ci_cd) and rates priority, complexity, and risk.
-- **Story Point Estimation**: Deterministically maps AI-assessed complexity to standard agile story points (1, 2, 3, 5, 8).
-- **Implementation Planning**: Generates 2-5 concise implementation steps and acceptance criteria conditions.
+- **Classification**: Categorizes issues (bug, feature, refactor, ci_cd) and rates priority, complexity, and risk on a bounded scale.
+- **Story Point Estimation**: Deterministically maps AI-assessed complexity to standard Fibonacci story points (1, 2, 3, 5, 8).
+- **Implementation Planning**: Generates 2–5 concise, ordered implementation steps and concrete acceptance criteria.
 
 ### Confidence Scoring System
-*GitOps AI does not trust LLMs to grade their own homework.* Confidence (`low`, `medium`, `high`) is calculated **deterministically** by analyzing the density of the source data (body length, comment count, label count) and the diversity of the evidence extracted by the AI.
+> *GitOps AI does not trust LLMs to grade their own homework.*
+
+Confidence (`low`, `medium`, `high`) is calculated **deterministically** by analyzing the density of source data (body length, comment count, label count) and the diversity of evidence extracted by the AI — independent of the LLM's self-reported certainty.
 
 ### Structured Output Pipeline
 ```
-Agentic AI -> application/json -> JSON.parse() -> Zod validation -> Persistence Layer
+Agentic AI → application/json → JSON.parse() → Zod validation → Persistence Layer
 ```
-If the AI hallucinates keys or deviates from bounded arrays (e.g., providing 10 steps instead of the requested max of 5), Zod rejects the payload, preventing bad data from entering the database.
+If the AI hallucinates keys or deviates from bounded arrays (e.g., providing 10 steps instead of the max of 5), **Zod rejects the payload**, preventing malformed data from entering the database.
 
 ---
 
-## Security & Reliability
+## 🔒 Security & Reliability
 
-- **Schema Validation**: All AI inputs and outputs are validated at runtime using `Zod`.
-- **Type Safety**: End-to-end TypeScript enforcement. `tsc --noEmit` is required for CI.
-- **Input Sanitization**: Prompts utilize a `sanitize()` function to strip role-play directives, system overrides, and control characters to resist Prompt Injection attacks.
-- **Idempotency**: Services employ a 15-minute caching window for AI analyses to prevent API spam and reduce AI inference costs.
-- **Data Isolation**: Supabase Row Level Security ensures users can only read, sync, and analyze repositories tied to their authenticated Profile ID.
+| Concern | Implementation |
+|---------|---------------|
+| **AI Output Safety** | All AI outputs validated at runtime using `Zod` schemas — malformed outputs are rejected |
+| **Prompt Injection** | `sanitize()` function strips role-play directives, system overrides, and control characters |
+| **Idempotency** | 15-minute caching window prevents API spam and reduces AI inference costs |
+| **Data Isolation** | Supabase Row Level Security ensures users can only access their own repositories |
+| **Type Safety** | End-to-end TypeScript enforcement; `tsc --noEmit` required before any commit |
 
 ---
 
-## Project Structure
+## ⚡ Performance Characteristics
+
+- **Parallel Loading**: Detail pages use `Promise.allSettled` to fetch repository metadata and AI analyses concurrently — UI stays responsive even on AI cache misses.
+- **Token Optimization**: AI prompts are aggressively trimmed (e.g., issue bodies capped at 1200 chars); extraneous metadata is stripped before reaching the AI engine.
+- **Validation Overhead**: Zod runs only at system boundaries (API ingestion, AI output) — keeping the hot-path within the service layer fast and fully type-safe.
+
+---
+
+## 📁 Project Structure
 
 ```text
 gitops-ai/
@@ -218,88 +240,94 @@ gitops-ai/
 
 ---
 
-## API Reference
+## 🔌 API Reference
 
 | Method | Endpoint | Purpose |
 |--------|----------|---------|
-| `GET`  | `/api/repositories` | Retrieve a list of synced repositories for the user. |
-| `POST` | `/api/repositories` | Sync a single repository by GitHub URL or Name. |
-| `POST` | `/api/repositories/sync` | Trigger a bulk synchronization job. |
-| `POST` | `/api/repositories/[id]/analyze` | Trigger Agentic AI to generate a new Repository Health Analysis. |
-| `GET`  | `/api/repositories/[id]/analysis` | Fetch the latest cached Repository Analysis. |
-| `GET`  | `/api/issues` | Retrieve synced issues across repositories. |
-| `POST` | `/api/issues/[id]/analyze` | Trigger Agentic AI to generate an Issue Intelligence V2 Analysis. |
-| `GET`  | `/api/issues/[id]/analysis` | Fetch the latest cached Issue Analysis. |
+| `GET`  | `/api/repositories` | Retrieve synced repositories for the authenticated user |
+| `POST` | `/api/repositories` | Sync a repository by GitHub URL or name |
+| `POST` | `/api/repositories/sync` | Trigger a bulk synchronization job |
+| `POST` | `/api/repositories/[id]/analyze` | Trigger AI to generate a new Repository Health Analysis |
+| `GET`  | `/api/repositories/[id]/analysis` | Fetch the latest cached Repository Analysis |
+| `GET`  | `/api/issues` | Retrieve synced issues across all repositories |
+| `POST` | `/api/issues/[id]/analyze` | Trigger AI to generate an Issue Intelligence V2 Analysis |
+| `GET`  | `/api/issues/[id]/analysis` | Fetch the latest cached Issue Analysis |
 
 ---
 
-## Performance Characteristics
+## 📋 Current Status
 
-- **Parallel Loading**: Detail pages use `Promise.allSettled` to fetch repository metadata and AI analyses concurrently, ensuring the UI remains responsive even if the AI cache misses.
-- **Token Optimization**: AI prompts are aggressively truncated (e.g., Issue bodies limited to 1200 chars). Extraneous metadata is stripped before reaching the AI engine.
-- **Validation Overhead**: Zod is used precisely at system boundaries (API ingestion, AI output) keeping the hot-path within the service layer fast and typesafe.
+### ✅ Fully Implemented
+- **Supabase Authentication** — Email/Password login with secure cookie-based session management
+- **GitHub Entity Synchronization** — Repositories, Issues, and Pull Requests synced via idempotent upserts
+- **Repository Intelligence** — AI health scoring, lifecycle classification, risk analysis, and prioritized recommendations
+- **Issue Intelligence V2** — Full classification, complexity estimation, story point generation, acceptance criteria, implementation planning, and blocker detection
+- **Roadmap Intelligence** — AI-generated sprint planning and issue-to-epic mapping
+- **Dark Mode SaaS UI** — Responsive Next.js App Router dashboard with professional design
+- **Database Architecture** — Full PostgreSQL schema with RLS policies, triggers, and incremental migrations
 
----
+### 🔄 Actively Building (4 Phases Remaining)
+1. **PR Intelligence** — AI-assisted code review summaries and merge risk flagging
+2. **Engineering Analytics Dashboard** — Burn-down charts, PR velocity, and developer throughput metrics
+3. **Predictive Risk Analysis** — Correlating PR complexity with historical defect rates
+4. **LangGraph Multi-Agent Orchestration** — Replacing single-prompt AI calls with a stateful, multi-step agentic pipeline
 
-## Current Status
-
-### Production Ready
-- Supabase Authentication (Email/Password).
-- GitHub Entity Synchronization (Repositories & Issues).
-- Repository Intelligence (Health Scoring).
-- Issue Intelligence V2 (Classification & Planning).
-- Dark Mode SaaS UI.
-
-### In Progress
-- Pull Request synchronization pipeline (Database layer implemented, UI pending).
-
-### Known Limitations
-- AI API is subject to rate limiting; retries currently throw standard UI errors.
-- Issue syncing is currently limited to top 50 recent issues to preserve API quota.
+### ⚠️ Known Limitations
+- AI API is subject to rate limiting; retries currently surface standard UI errors
+- Issue syncing is capped at 50 most recent issues to preserve API quota
 
 ---
 
-## Roadmap
+## 🗺️ Roadmap
 
 ### Completed
-- [x] Database architecture and RLS policies
-- [x] Repository Intelligence
-- [x] Issue Intelligence V2
+- [x] Database architecture, RLS policies, and migration pipeline
+- [x] Supabase Auth with secure session management
+- [x] GitHub Entity Synchronization (Repos, Issues, PRs)
+- [x] Repository Intelligence (Health Scoring & Risk Analysis)
+- [x] Issue Intelligence V2 (Classification, Estimation & Planning)
+- [x] Roadmap Intelligence (AI Sprint Planning)
+- [x] Dark Mode SaaS Dashboard UI
 
-### Planned
-- [ ] **PR Intelligence**: AI-assisted code review summaries and risk flagging.
-- [ ] **Sprint Planning AI**: Automated sprint suggestions based on story point capacity.
-- [ ] **Roadmap Intelligence**: Mapping issues to higher-level epics.
-- [ ] **Engineering Analytics Dashboard**: Burn-down charts and velocity tracking.
-- [ ] **Predictive Risk Analysis**: Correlating PR complexity with historical bug rates.
-
----
-
-## Screenshots
-
-*(Replace placeholders with actual images)*
-
-![Dashboard View](/placeholder-dashboard.png)
-*GitOps AI Repository Dashboard*
-
-![Issue Intelligence Scorecard](/placeholder-issue.png)
-*V2 Issue Intelligence Engineering Scorecard*
+### In Progress
+- [ ] **PR Intelligence**: AI-assisted code review summaries and merge risk flagging
+- [ ] **Engineering Analytics Dashboard**: Burn-down charts, velocity tracking, and throughput metrics
+- [ ] **Predictive Risk Analysis**: Correlating PR complexity with historical bug rates
+- [ ] **LangGraph Multi-Agent Orchestration**: Stateful, graph-based agentic pipeline replacing single-prompt flows
 
 ---
 
-## Why This Project Matters
+## 💡 Why This Project Matters
 
-**For Engineering Leaders & Hiring Managers:**
-GitOps AI is not a trivial wrapper around an LLM. It demonstrates deep architectural maturity, showcasing:
-- **Full Stack Engineering**: Seamless integration of a Next.js App Router frontend with a secure, service-oriented Node backend.
-- **System Design**: Clear boundaries between HTTP handlers, business logic, data access, and third-party APIs.
-- **AI Engineering**: Moving beyond chatbots to structured, deterministic, and schema-validated AI outputs embedded directly into business workflows.
-- **Database Design**: Relational integrity, cascade deletions, and robust Row Level Security in PostgreSQL.
-- **Product Thinking**: Focusing on "Engineering Intelligence" rather than generic AI text generation, addressing real-world DevOps visibility problems.
+> **For Engineering Leaders & Hiring Managers:**
+
+GitOps AI is not a trivial LLM wrapper. It demonstrates architectural maturity across the full stack:
+
+- **Full Stack Engineering**: Next.js App Router frontend with a clean, service-oriented Node.js backend — proper separation of concerns at every layer.
+- **System Design**: Clear boundaries between HTTP handlers, business logic, data access, and third-party APIs — designed to scale.
+- **AI Engineering**: Moving beyond chatbots to **structured, deterministic, and schema-validated AI outputs** embedded directly into business workflows. The confidence scoring system is calculated independently of the LLM — a deliberate engineering choice.
+- **Database Design**: Relational integrity, cascade deletions, PostgreSQL triggers, and Row Level Security — not just a flat CRUD app.
+- **Security Mindset**: Prompt injection mitigation, runtime schema validation, and tenant isolation are first-class concerns — not afterthoughts.
+- **Product Thinking**: Solving a real DevOps visibility problem rather than building a generic AI demo.
 
 ---
 
-## Local Setup
+## 🧑‍💻 Technical Highlights
+
+Things I'm particularly proud of from an engineering perspective:
+
+| Decision | Rationale |
+|----------|-----------|
+| **Deterministic confidence scoring** | LLMs shouldn't self-grade. Confidence is computed from data density, not LLM output |
+| **Zod at system boundaries only** | Prevents performance overhead while guaranteeing type-safety where it matters most |
+| **Repository pattern for DAL** | Abstracts Supabase queries, making the service layer testable and database-agnostic |
+| **`Promise.allSettled` for parallel fetching** | Dashboard stays responsive even when AI cache misses — partial failures don't block the UI |
+| **Token-optimized prompts** | Aggressive truncation reduces inference cost and latency without sacrificing output quality |
+| **Idempotent sync jobs** | GitHub sync uses UUID checks and upserts — safe to re-run without duplicating data |
+
+---
+
+## ⚙️ Local Setup
 
 1. **Clone the repository:**
    ```bash
@@ -315,15 +343,15 @@ GitOps AI is not a trivial wrapper around an LLM. It demonstrates deep architect
 3. **Set up environment variables:**
    ```bash
    cp .env.local.example .env.local
-   # Populate with your Supabase, GitHub, and Gemini keys
+   # Populate with your Supabase, GitHub, and Gemini API keys
    ```
 
-4. **Run development server:**
+4. **Run the development server:**
    ```bash
    npm run dev
    ```
 
-## Environment Variables
+## 🔑 Environment Variables
 
 Required variables in `.env.local`:
 ```env
@@ -332,12 +360,12 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
 GEMINI_API_KEY=your_agentic_ai_api_key
 ```
 
-## Contribution Guide
+## 🤝 Contribution Guide
 
-1. Fork the Project.
-2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`).
-3. Ensure types pass (`npm run build` or `npx tsc --noEmit`).
-4. Ensure linting passes (`npm run lint`).
-5. Commit your Changes (`git commit -m 'Add some AmazingFeature'`).
-6. Push to the Branch (`git push origin feature/AmazingFeature`).
+1. Fork the project.
+2. Create your feature branch: `git checkout -b feature/AmazingFeature`
+3. Ensure types pass: `npx tsc --noEmit`
+4. Ensure linting passes: `npm run lint`
+5. Commit your changes: `git commit -m 'Add some AmazingFeature'`
+6. Push to the branch: `git push origin feature/AmazingFeature`
 7. Open a Pull Request.
